@@ -1,10 +1,11 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://ecommerce-backend-production-b870.up.railway.app',
+  baseURL: 'https://e-commas-apis-production.up.railway.app',
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: false,
 });
 
 api.interceptors.request.use((config) => {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { AuthContextType, User } from '../types';
 import api from '../utils/api';
 
@@ -8,17 +8,13 @@ const ADMIN_EMAIL = 'admin@admin.com';
 const ADMIN_PASSWORD = 'admin123';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    const savedToken = localStorage.getItem('token');
+  const [user, setUser] = useState<User | null>(() => {
     const savedUser = localStorage.getItem('user');
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-    }
-  }, []);
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem('token');
+  });
 
   const login = async (email: string, password: string) => {
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
@@ -36,7 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    const response = await api.post('/auth/login', { email, password });
+    const response = await api.post('/auth/users/login', { email, password });
     const { token: receivedToken, user: receivedUser } = response.data;
     localStorage.setItem('token', receivedToken);
     localStorage.setItem('user', JSON.stringify(receivedUser));

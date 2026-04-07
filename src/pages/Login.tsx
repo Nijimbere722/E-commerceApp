@@ -15,7 +15,7 @@ const schema = z.object({
 type LoginForm = z.infer<typeof schema>;
 
 const Login = () => {
-  const { login, userRole } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -28,7 +28,7 @@ const Login = () => {
     try {
       await login(data.email, data.password);
       toast.success('Login successful!');
-      if (userRole === 'ADMIN') {
+      if (data.email === 'admin@admin.com') {
         navigate('/admin');
       } else {
         navigate('/');
