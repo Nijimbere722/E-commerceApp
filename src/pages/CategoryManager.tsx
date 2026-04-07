@@ -35,7 +35,7 @@ const CategoryManager = () => {
 
   const updateMutation = useMutation({
     mutationFn: async () => {
-      await api.patch(`/categories/${editId}`, { name: editName });
+      await api.put(`/categories/${editId}`, { name: editName });
     },
     onSuccess: () => {
       toast.success('Category updated!');
@@ -61,26 +61,34 @@ const CategoryManager = () => {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Manage Categories</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">
+        Manage Categories
+      </h1>
 
+      {/* Add new category */}
       <div className="flex gap-3 mb-6">
         <input
           value={newCategory}
           onChange={(e) => setNewCategory(e.target.value)}
           placeholder="New category name"
-          className="flex-1 border rounded-lg px-3 py-2 text-sm"
+          className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
         />
         <button
           onClick={() => createMutation.mutate()}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          disabled={!newCategory.trim()}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
         >
           Add
         </button>
       </div>
 
+      {/* Categories list */}
       <div className="space-y-3">
         {categories?.map((cat) => (
-          <div key={cat.id} className="flex items-center gap-3 border rounded-lg px-4 py-3">
+          <div
+            key={cat.id}
+            className="flex items-center gap-3 border rounded-lg px-4 py-3"
+          >
             {editId === cat.id ? (
               <>
                 <input
@@ -88,14 +96,37 @@ const CategoryManager = () => {
                   onChange={(e) => setEditName(e.target.value)}
                   className="flex-1 border rounded px-2 py-1 text-sm"
                 />
-                <button onClick={() => updateMutation.mutate()} className="text-green-600 text-sm">Save</button>
-                <button onClick={() => setEditId(null)} className="text-gray-500 text-sm">Cancel</button>
+                <button
+                  onClick={() => updateMutation.mutate()}
+                  className="text-green-600 text-sm hover:underline"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => setEditId(null)}
+                  className="text-gray-500 text-sm hover:underline"
+                >
+                  Cancel
+                </button>
               </>
             ) : (
               <>
                 <span className="flex-1 text-gray-700">{cat.name}</span>
-                <button onClick={() => { setEditId(cat.id); setEditName(cat.name); }} className="text-blue-600 text-sm">Edit</button>
-                <button onClick={() => setDeleteId(cat.id)} className="text-red-500 text-sm">Delete</button>
+                <button
+                  onClick={() => {
+                    setEditId(cat.id);
+                    setEditName(cat.name);
+                  }}
+                  className="text-blue-600 text-sm hover:underline"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => setDeleteId(cat.id)}
+                  className="text-red-500 text-sm hover:underline"
+                >
+                  Delete
+                </button>
               </>
             )}
           </div>
@@ -104,7 +135,7 @@ const CategoryManager = () => {
 
       {deleteId && (
         <ConfirmModal
-          message="Delete this category?"
+          message="Are you sure you want to delete this category?"
           onConfirm={() => deleteMutation.mutate(deleteId)}
           onCancel={() => setDeleteId(null)}
         />

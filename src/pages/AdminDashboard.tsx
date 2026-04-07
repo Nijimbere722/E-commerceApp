@@ -15,14 +15,14 @@ const AdminDashboard = () => {
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ['products'],
     queryFn: async () => {
-      const res = await api.get('/products');
+      const res = await api.get('/public/products');
       return res.data;
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await api.delete(`/products/${id}`);
+      await api.delete(`/admin/products/${id}`);
     },
     onSuccess: () => {
       toast.success('Product deleted!');
@@ -81,22 +81,26 @@ const AdminDashboard = () => {
                     className="w-12 h-12 object-cover rounded-lg"
                   />
                 </td>
-                <td className="px-4 py-3 font-medium text-gray-800">{product.title}</td>
+                <td className="px-4 py-3 font-medium text-gray-800">
+                  {product.title}
+                </td>
                 <td className="px-4 py-3 text-blue-600">${product.price}</td>
                 <td className="px-4 py-3">{product.stock}</td>
-                <td className="px-4 py-3 flex gap-2">
-                  <button
-                    onClick={() => navigate(`/admin/product/${product.id}`)}
-                    className="text-blue-600 hover:underline"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setDeleteId(product.id)}
-                    className="text-red-500 hover:underline"
-                  >
-                    Delete
-                  </button>
+                <td className="px-4 py-3">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => navigate(`/admin/product/${product.id}`)}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setDeleteId(product.id)}
+                      className="text-red-500 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
