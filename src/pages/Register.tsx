@@ -26,11 +26,12 @@ const Register = () => {
 
   const onSubmit = async (data: RegisterForm) => {
     try {
-      await api.post('/users/register', data);
+      await api.post('/auth/users/register', data);
       toast.success('Account created! Please login.');
       navigate('/login');
-    } catch (error) {
-      toast.error('Registration failed. Try again.');
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Registration failed. Try again.';
+      toast.error(message);
     }
   };
 
@@ -38,7 +39,7 @@ const Register = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
         <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Create Account</h2>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
           <FormInput
             label="Full Name"
             name="name"
@@ -65,9 +66,9 @@ const Register = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 mt-2"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 mt-2 disabled:opacity-50"
           >
-            {isSubmitting ? 'Creating...' : 'Register'}
+            {isSubmitting ? 'Creating account...' : 'Register'}
           </button>
         </form>
         <p className="text-sm text-center text-gray-500 mt-4">

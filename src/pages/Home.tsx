@@ -11,7 +11,7 @@ const Home = () => {
   const { data: products, isLoading: productsLoading } = useQuery<Product[]>({
     queryKey: ['products'],
     queryFn: async () => {
-      const res = await api.get('/products');
+      const res = await api.get('/public/products');
       return res.data;
     },
   });
@@ -57,6 +57,8 @@ const Home = () => {
 
       {productsLoading ? (
         <LoadingSpinner />
+      ) : filtered?.length === 0 ? (
+        <p className="text-gray-500 text-center mt-10">No products found.</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filtered?.map((product) => (

@@ -14,17 +14,17 @@ const Cart = () => {
   const { data: cart, isLoading } = useQuery<CartType>({
     queryKey: ['cart'],
     queryFn: async () => {
-      const res = await api.get('/cart');
+      const res = await api.get('/auth/cart');
       return res.data;
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ productId, quantity }: { productId: string; quantity: number }) => {
+    mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
       if (quantity <= 0) {
-        await api.delete(`/cart/${productId}`);
+        await api.delete(`/auth/cart/items/${itemId}`);
       } else {
-        await api.post('/cart', { productId, quantity });
+        await api.patch(`/auth/cart/items/${itemId}`, { quantity });
       }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
@@ -32,7 +32,8 @@ const Cart = () => {
   });
 
   const total = cart?.items?.reduce(
-    (sum, item) => sum + item.product.price * item.quantity, 0
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
   ) ?? 0;
 
   if (isLoading) return <LoadingSpinner />;
@@ -48,14 +49,18 @@ const Cart = () => {
             <CartItem
               key={item.id}
               item={item}
-              onRemove={(productId) => updateMutation.mutate({ productId, quantity: 0 })}
-              onQuantityChange={(productId, quantity) =>
-                updateMutation.mutate({ productId, quantity })
+              onRemove={(itemId) =>
+                updateMutation.mutate({ itemId, quantity: 0 })
+              }
+              onQuantityChange={(itemId, quantity) =>
+                updateMutation.mutate({ itemId, quantity })
               }
             />
           ))}
           <div className="flex justify-between items-center mt-6 border-t pt-4">
-            <p className="text-lg font-bold text-gray-800">Total: ${total.toFixed(2)}</p>
+            <p className="text-lg font-bold text-gray-800">
+              Total: ${total.toFixed(2)}
+            </p>
             <button
               onClick={() => navigate('/checkout')}
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
