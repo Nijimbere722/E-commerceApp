@@ -9,7 +9,7 @@ const OrderHistory = () => {
   const { data: orders, isLoading } = useQuery<Order[]>({
     queryKey: ['myOrders'],
     queryFn: async () => {
-      const res = await api.get('/orders/me');
+      const res = await api.get('/auth/orders');
       return res.data;
     },
   });

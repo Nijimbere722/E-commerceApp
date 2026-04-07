@@ -14,7 +14,12 @@ const schema = z.object({
   city: z.string().min(2, 'City is required'),
   postalCode: z.string().optional(),
   phone: z.string().regex(/^\d{10}$/, 'Phone must be exactly 10 digits'),
-  paymentMethod: z.enum(['CREDIT_CARD', 'PAYPAL', 'MOBILE_MONEY', 'CASH_ON_DELIVERY']),
+  paymentMethod: z.enum([
+    'CREDIT_CARD',
+    'PAYPAL',
+    'MOBILE_MONEY',
+    'CASH_ON_DELIVERY',
+  ]),
 });
 
 type CheckoutForm = z.infer<typeof schema>;
@@ -30,11 +35,12 @@ const Checkout = () => {
     handleSubmit,
     formState: { errors },
     getValues,
+    trigger,
   } = useForm<CheckoutForm>({ resolver: zodResolver(schema) });
 
   const mutation = useMutation({
     mutationFn: async (data: CheckoutForm) => {
-      await api.post('/orders', {
+      await api.post('/auth/orders', {
         shippingAddress: data.shippingAddress,
         city: data.city,
         postalCode: data.postalCode,
@@ -46,8 +52,20 @@ const Checkout = () => {
       toast.success('Order placed successfully!');
       navigate('/orders');
     },
-    onError: () => toast.error('Failed to place order'),
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Failed to place order';
+      toast.error(message);
+    },
   });
+
+  const handleNext = async () => {
+    const fields =
+      step === 0
+        ? (['fullName', 'shippingAddress', 'city', 'phone'] as const)
+        : (['paymentMethod'] as const);
+    const valid = await trigger(fields);
+    if (valid) setStep((s) => s + 1);
+  };
 
   const onSubmit = (data: CheckoutForm) => {
     mutation.mutate(data);
@@ -60,7 +78,12 @@ const Checkout = () => {
       {/* Steps Indicator */}
       <div className="flex justify-between mb-8">
         {steps.map((s, i) => (
-          <div key={s} className={`text-sm font-medium ${i === step ? 'text-blue-600' : 'text-gray-400'}`}>
+          <div
+            key={s}
+            className={`text-sm font-medium ${
+              i === step ? 'text-blue-600' : 'text-gray-400'
+            }`}
+          >
             {i + 1}. {s}
           </div>
         ))}
@@ -69,12 +92,45 @@ const Checkout = () => {
       <form onSubmit={handleSubmit(onSubmit)}>
         {step === 0 && (
           <div>
-            <FormInput label="Full Name" name="fullName" register={register} error={errors.fullName?.message} />
-            <FormInput label="Shipping Address" name="shippingAddress" register={register} error={errors.shippingAddress?.message} />
-            <FormInput label="City" name="city" register={register} error={errors.city?.message} />
-            <FormInput label="Postal Code (optional)" name="postalCode" register={register} error={errors.postalCode?.message} />
-            <FormInput label="Phone (10 digits)" name="phone" register={register} error={errors.phone?.message} />
-            <button type="button" onClick={() => setStep(1)} className="w-full bg-blue-600 text-white py-2 rounded-lg mt-2">
+            <FormInput
+              label="Full Name"
+              name="fullName"
+              placeholder="John Doe"
+              register={register}
+              error={errors.fullName?.message}
+            />
+            <FormInput
+              label="Shipping Address"
+              name="shippingAddress"
+              placeholder="123 Main St"
+              register={register}
+              error={errors.shippingAddress?.message}
+            />
+            <FormInput
+              label="City"
+              name="city"
+              placeholder="Kigali"
+              register={register}
+              error={errors.city?.message}
+            />
+            <FormInput
+              label="Postal Code (optional)"
+              name="postalCode"
+              register={register}
+              error={errors.postalCode?.message}
+            />
+            <FormInput
+              label="Phone (10 digits)"
+              name="phone"
+              placeholder="0780000000"
+              register={register}
+              error={errors.phone?.message}
+            />
+            <button
+              type="button"
+              onClick={handleNext}
+              className="w-full bg-blue-600 text-white py-2 rounded-lg mt-2 hover:bg-blue-700"
+            >
               Next
             </button>
           </div>
@@ -82,39 +138,72 @@ const Checkout = () => {
 
         {step === 1 && (
           <div>
-            <label className="text-sm font-medium text-gray-700">Payment Method</label>
+            <label className="text-sm font-medium text-gray-700">
+              Payment Method
+            </label>
             <select
               {...register('paymentMethod')}
-              className="w-full border rounded-lg px-3 py-2 mt-1 mb-2"
+              className="w-full border rounded-lg px-3 py-2 mt-1 mb-2 text-sm"
             >
               <option value="CREDIT_CARD">Credit Card</option>
               <option value="PAYPAL">PayPal</option>
               <option value="MOBILE_MONEY">Mobile Money</option>
               <option value="CASH_ON_DELIVERY">Cash on Delivery</option>
             </select>
-            {errors.paymentMethod && <p className="text-red-500 text-xs">{errors.paymentMethod.message}</p>}
+            {errors.paymentMethod && (
+              <p className="text-red-500 text-xs">{errors.paymentMethod.message}</p>
+            )}
             <div className="flex gap-3 mt-4">
-              <button type="button" onClick={() => setStep(0)} className="flex-1 border py-2 rounded-lg">Back</button>
-              <button type="button" onClick={() => setStep(2)} className="flex-1 bg-blue-600 text-white py-2 rounded-lg">Next</button>
+              <button
+                type="button"
+                onClick={() => setStep(0)}
+                className="flex-1 border py-2 rounded-lg"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={handleNext}
+                className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+              >
+                Next
+              </button>
             </div>
           </div>
         )}
 
         {step === 2 && (
           <div>
-            <h3 className="font-semibold text-gray-700 mb-4">Review your order</h3>
+            <h3 className="font-semibold text-gray-700 mb-4">
+              Review your order
+            </h3>
             <div className="text-sm text-gray-600 space-y-2 bg-gray-50 p-4 rounded-lg">
-              <p><strong>Name:</strong> {getValues('fullName')}</p>
-              <p><strong>Address:</strong> {getValues('shippingAddress')}, {getValues('city')}</p>
-              <p><strong>Phone:</strong> {getValues('phone')}</p>
-              <p><strong>Payment:</strong> {getValues('paymentMethod')}</p>
+              <p>
+                <strong>Name:</strong> {getValues('fullName')}
+              </p>
+              <p>
+                <strong>Address:</strong> {getValues('shippingAddress')},{' '}
+                {getValues('city')}
+              </p>
+              <p>
+                <strong>Phone:</strong> {getValues('phone')}
+              </p>
+              <p>
+                <strong>Payment:</strong> {getValues('paymentMethod')}
+              </p>
             </div>
             <div className="flex gap-3 mt-6">
-              <button type="button" onClick={() => setStep(1)} className="flex-1 border py-2 rounded-lg">Back</button>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="flex-1 border py-2 rounded-lg"
+              >
+                Back
+              </button>
               <button
                 type="submit"
                 disabled={mutation.isPending}
-                className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
               >
                 {mutation.isPending ? 'Placing...' : 'Place Order'}
               </button>

@@ -5,7 +5,13 @@ import { Order } from '../types';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 
-const statusOptions = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+const statusOptions = [
+  'PENDING',
+  'PROCESSING',
+  'SHIPPED',
+  'DELIVERED',
+  'CANCELLED',
+];
 
 const AllOrders = () => {
   const queryClient = useQueryClient();
@@ -13,14 +19,14 @@ const AllOrders = () => {
   const { data: orders, isLoading } = useQuery<Order[]>({
     queryKey: ['allOrders'],
     queryFn: async () => {
-      const res = await api.get('/orders');
+      const res = await api.get('/auth/orders/admin/all');
       return res.data;
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      await api.put(`/orders/${id}/status`, { status });
+      await api.patch(`/auth/orders/${id}/status`, { status });
     },
     onSuccess: () => {
       toast.success('Order status updated!');
@@ -49,19 +55,30 @@ const AllOrders = () => {
             {orders?.map((order) => (
               <tr key={order.id} className="border-t hover:bg-gray-50">
                 <td className="px-4 py-3 font-mono text-xs">{order.id}</td>
-                <td className="px-4 py-3">{new Date(order.createdAt).toLocaleDateString()}</td>
+                <td className="px-4 py-3">
+                  {new Date(order.createdAt).toLocaleDateString()}
+                </td>
                 <td className="px-4 py-3 text-blue-600">${order.total}</td>
                 <td className="px-4 py-3">
-                  <span className="px-2 py-1 rounded-full text-xs bg-gray-100">{order.status}</span>
+                  <span className="px-2 py-1 rounded-full text-xs bg-gray-100">
+                    {order.status}
+                  </span>
                 </td>
                 <td className="px-4 py-3">
                   <select
                     defaultValue={order.status}
-                    onChange={(e) => updateMutation.mutate({ id: order.id, status: e.target.value })}
+                    onChange={(e) =>
+                      updateMutation.mutate({
+                        id: order.id,
+                        status: e.target.value,
+                      })
+                    }
                     className="border rounded px-2 py-1 text-sm"
                   >
                     {statusOptions.map((s) => (
-                      <option key={s} value={s}>{s}</option>
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
                     ))}
                   </select>
                 </td>
